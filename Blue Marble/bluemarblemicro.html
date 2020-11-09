@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+
+<title>BLUE MARBLE MICROINSURANCE</title>
+	<script type="text/javascript" src="d3.min.js"></script>
+	<script src="//d3js.org/d3.v4.min.js"></script>
+	<script src="jquery-3.2.0.min.js"></script>
+	<script src="opencpu-0.4.js"></script>
+
+	<style>
+
+	.axis {
+	  font: 10px sans-serif;
+	}
+	.bar{
+    fill: steelblue;
+  	}
+
+
+	.axis path,
+	.axis line {
+	  fill: none;
+	  stroke: #000;
+	  shape-rendering: crispEdges;
+	}
+
+	</style>	
+</head>
+
+<body>
+
+<div id="reload" style="position: absolute; top: 60px; left: 500px; width: 100px; height: 30px;">
+      <input onclick="location.reload(true);" type='button' value="Reload">
+</div>
+
+<div id="plotbutton" style="position: absolute; top: 60px; left: 600px; width: 100px; height: 30px;">
+      <input type='button' value="Plot">
+</div>
+
+<form style="position: absolute; top: 10px; left: 20px">
+  Start Date:<br>
+  <input type="date" id="start_date" min="2010-01-01" max="2016-12-31">
+</form>
+
+<form style="position: absolute; top: 10px; left: 250px">
+  End Date:<br>
+  <input type="date" id="end_date" min="2010-01-01" max="2016-12-31">
+</form>
+
+<div>
+	<p id = "latlong" style="position: absolute; top: 10px; left: 450px;height: 30px;width: 200px;"></p> 
+</div>
+
+<div id = "marker"></div>
+<h3 id = "plotheader"  style = "position: absolute; top: 5px; left: 800px"> RAINFALL</h3>
+
+<div id="mapframe" style="position: relative; top: 80px; left: 20px; width: 600px; height: 500px;">
+</div>
+
+<div id="plotframe" style="position: absolute; top: 30px; left: 650px; width: 550px; height: 500px; fill: transparent;">	
+</div>
+
+<script type= "text/javascript">
+
+var mapframe;
+var clickLat_1dp;
+var clickLong_1dp;
+
+      function initMap() {
+        mapframe = new google.maps.Map(document.getElementById('mapframe'), {
+          					center: {lat: -19, lng: 29.25},
+          					zoom: 6
+        });
+        
+        
+        google.maps.event.addListener(mapframe, "click", function(event) {
+                // get lat/lon of click
+                var clickLat = event.latLng.lat().toFixed(4);
+                var clickLong = event.latLng.lng().toFixed(4);
+                    
+                clickLat_1dp = Number(clickLat);
+                clickLong_1dp = Number(clickLong);   
+                clickLat_1dp = clickLat_1dp.toFixed(1);
+                clickLong_1dp = clickLong_1dp.toFixed(1);
+                clickLat_1dp = Number(clickLat_1dp);
+                clickLong_1dp = Number(clickLong_1dp);	
+
+               
+                var marker = new google.maps.Marker({
+                    	position: new google.maps.LatLng(clickLat,clickLong),
+                        map: mapframe
+
+        		});
+
+    			var infowindow = new google.maps.InfoWindow({
+    					content: (clickLat + ', ' + clickLong)
+  				});
+
+        		google.maps.event.addListener(marker, 'click', function() {
+        			infowindow.setContent(clickLat_1dp + ', ' + clickLong_1dp);
+            		infowindow.open(mapframe, this);
+          		});
+	
+    			//console.log( clickLat_1dp + ', ' + clickLong_1dp);
+    			document.getElementById("latlong").innerHTML = ( clickLat + ', ' + clickLong);
+
+		;
+
+    			
+    	//$("#plotbutton").on("click", function(){        	
+        //	$("#plotframe").rplot("plotrfe.R", {
+		//		          start_date : start_date,
+		//		          end_date : end_date,
+		//		          clicklat : clickLat_1dp,
+		//		          clicklong : clickLong_1dp
+		//		    })
+		//});
+
+		});
+     }
+
+     		$(function(){
+				  
+				  //button handler
+				  $("#plotbutton").on("click", function(e){
+				    e.preventDefault();
+
+				    var start_date = $('#start_date').val();
+					var end_date = $('#end_date').val();
+
+					console.log(start_date+','+end_date+","+clickLat_1dp+","+clickLong_1dp);
+
+				    $("#plotbutton").attr("disabled", "disabled")
+				    var req = $("#plotframe").rplot("plotrfe.r", {
+				      		start_date : start_date,
+				          	end_date : end_date,
+				          	clicklat : clickLat_1dp,
+				          	clicklong : clickLong_1dp     
+				    }).always(function(){
+				      $("#plotbutton").removeAttr("disabled");
+				    }).fail(function(){
+				      alert("HTTP error " + req.status + ": " + req.responseText);
+				    });
+				  });
+				  
+				  //plot the default values on page load
+				  $("#plotbutton").trigger("click")
+				});
+
+
+
+</script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDIoxgBzn1bMpgTQTvoWyJslxcJJHTzsvM&callback=initMap"async defer>
+</script>
+
+</body>
+</html>
